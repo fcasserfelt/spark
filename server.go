@@ -16,21 +16,40 @@ func init() {
 }
 
 func main() {
+
+	n := negroni.Classic()
+
+	authMiddleware := membership.NewAuthMiddleware(userRepo)
+
 	router := mux.NewRouter()
+	apiRoutes := mux.NewRouter()
+
 	router.HandleFunc("/", HomeHandler)
 	router.HandleFunc("/register", RegisterHandler)
 
-	n := negroni.Classic()
+	apiRoutes.HandleFunc("/secured", SecuredHandler)
+
+	apiRoutes.HandleFunc("/secured/ping", SecuredPingHandler)
+
+	router.PathPrefix("/secured").Handler(negroni.New(
+		negroni.HandlerFunc(authMiddleware.Handler),
+		negroni.Wrap(apiRoutes),
+	))
+
 	n.UseHandler(router)
 	n.Run("localhost:3000")
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-
-	//user := userRepo.GetByEmail("fredrik@bitjoy.se")
-	//fmt.Fprintf(w, "id: %d email:%s", user.Id, user.Email)
-
 	fmt.Fprintf(w, "I'm alive")
+}
+
+func SecuredHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "I'm secure")
+}
+
+func SecuredPingHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "I'm secure ping")
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
