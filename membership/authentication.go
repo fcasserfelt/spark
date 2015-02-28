@@ -56,7 +56,7 @@ func GenerateToken(user *User) (string, error) {
 	token := jwt.New(jwt.GetSigningMethod("RS256"))
 
 	token.Claims["ID"] = user.Id
-	token.Claims["exp"] = time.Now().Add(time.Minute * 1).Unix()
+	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 	tokenString, err := token.SignedString(privateKey)
 
 	if err != nil {

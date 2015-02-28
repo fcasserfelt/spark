@@ -1,18 +1,31 @@
 package main
 
 import (
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/negroni"
 	"github.com/fcasserfelt/spark/data"
 	"github.com/fcasserfelt/spark/membership"
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
+	"io/ioutil"
 	"net/http"
 )
 
 var userRepo membership.UserRepo
 
 func init() {
-	userRepo = data.NewDbUserRepo()
+
+	var err error
+	var db *sql.DB
+	//db, err = sql.Open("postgres", "user=tim password=secret dbname=timeapp sslmode=disable host=localhost")
+	db, err = sql.Open("postgres", "user=spark_user password=secret dbname=spark sslmode=disable host=localhost")
+	if err != nil {
+		panic(err)
+	}
+	userRepo = data.NewDbUserRepo(db)
+
 }
 
 func main() {
@@ -22,18 +35,18 @@ func main() {
 	authMiddleware := membership.NewAuthMiddleware(userRepo)
 
 	router := mux.NewRouter()
-	apiRoutes := mux.NewRouter()
+	securedRoutes := mux.NewRouter()
 
 	router.HandleFunc("/", HomeHandler)
 	router.HandleFunc("/register", RegisterHandler)
+	router.HandleFunc("/token", TokenHandler)
 
-	apiRoutes.HandleFunc("/secured", SecuredHandler)
-
-	apiRoutes.HandleFunc("/secured/ping", SecuredPingHandler)
+	securedRoutes.HandleFunc("/secured", SecuredHandler)
+	securedRoutes.HandleFunc("/secured/ping", SecuredPingHandler)
 
 	router.PathPrefix("/secured").Handler(negroni.New(
 		negroni.HandlerFunc(authMiddleware.Handler),
-		negroni.Wrap(apiRoutes),
+		negroni.Wrap(securedRoutes),
 	))
 
 	n.UseHandler(router)
@@ -52,21 +65,38 @@ func SecuredPingHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "I'm secure ping")
 }
 
+func TokenHandler(w http.ResponseWriter, r *http.Request) {
+	var email, password string
+
+	email = r.PostFormValue("email")
+	password = r.PostFormValue("password")
+
+	var a = membership.NewAuthenticationManager(userRepo)
+	_, token, err := a.Login(email, password)
+
+	if err != nil {
+		fmt.Fprintf(w, "Error: %v", err)
+		return
+	}
+
+	fmt.Fprint(w, token)
+}
+
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
-	var email, password, confirm string
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Fprintf(w, "Error: %v", err)
+		return
+	}
+	var a membership.Application
+	err = json.Unmarshal(body, &a)
 
-	email = "new@example.com"
-	password = "secret"
-	confirm = "secret"
-
-	var a *membership.Application
 	var reg *membership.RegistrationManager
 
-	a = membership.NewApplication(email, password, confirm)
 	reg = membership.NewRegistrationManager(userRepo)
 
-	user, token, err := reg.Apply(a)
+	user, token, err := reg.Apply(&a)
 
 	if err != nil {
 		fmt.Fprintf(w, "Error: %v", err)
