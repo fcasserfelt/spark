@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/codegangsta/negroni"
 	"github.com/fcasserfelt/spark/data"
@@ -17,10 +18,17 @@ var userRepo membership.UserRepo
 
 func init() {
 
+	var dbUser = flag.String("dbUser", "spark_user", "Enter database user name")
+	var dbPassword = flag.String("dbPassword", "secret", "Enter database user password")
+	var dbName = flag.String("dbName", "spark", "Enter database name")
+	var dbHost = flag.String("dbHost", "localhost", "Enter database address")
+	flag.Parse()
+
 	var err error
 	var db *sql.DB
-	//db, err = sql.Open("postgres", "user=tim password=secret dbname=timeapp sslmode=disable host=localhost")
-	db, err = sql.Open("postgres", "user=spark_user password=secret dbname=spark sslmode=disable host=localhost")
+	s := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s", *dbUser, *dbPassword, *dbName, *dbHost)
+	fmt.Println(s)
+	db, err = sql.Open("postgres", s)
 	if err != nil {
 		panic(err)
 	}
