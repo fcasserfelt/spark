@@ -58,7 +58,7 @@ func main() {
 	))
 
 	n.UseHandler(router)
-	n.Run("localhost:3000")
+	n.Run(":3000")
 }
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
