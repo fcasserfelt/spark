@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/codegangsta/negroni"
 	"github.com/fcasserfelt/spark/data"
@@ -12,22 +11,25 @@ import (
 	_ "github.com/lib/pq"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 var userRepo membership.UserRepo
 
 func init() {
 
-	var dbUser = flag.String("dbUser", "spark_user", "Enter database user name")
-	var dbPassword = flag.String("dbPassword", "secret", "Enter database user password")
-	var dbName = flag.String("dbName", "spark", "Enter database name")
-	var dbHost = flag.String("dbHost", "localhost", "Enter database address")
-	flag.Parse()
+	var DB_ENV_POSTGRES_USER = os.Getenv("DB_ENV_POSTGRES_USER")
+	var DB_ENV_POSTGRES_PASSWORD = os.Getenv("DB_ENV_POSTGRES_PASSWORD")
+	var DB_PORT_5432_TCP_ADDR = os.Getenv("DB_PORT_5432_TCP_ADDR")
 
 	var err error
 	var db *sql.DB
-	s := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable host=%s", *dbUser, *dbPassword, *dbName, *dbHost)
+
+	s := fmt.Sprintf("user=%s password=%s dbname=spark sslmode=disable host=%s", DB_ENV_POSTGRES_USER, DB_ENV_POSTGRES_PASSWORD, DB_PORT_5432_TCP_ADDR)
 	fmt.Println(s)
+
+	//	db, err = sql.Open("postgres", "user=%s password=%s dbname=spark sslmode=disable host=%s", DB_ENV_POSTGRES_USER, DB_ENV_POSTGRES_PASSWORD, DB_PORT)
+
 	db, err = sql.Open("postgres", s)
 	if err != nil {
 		panic(err)
