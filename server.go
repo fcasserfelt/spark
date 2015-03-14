@@ -22,6 +22,7 @@ func init() {
 	var DB_ENV_POSTGRES_PASSWORD = os.Getenv("DB_ENV_POSTGRES_PASSWORD")
 	var DB_PORT_5432_TCP_ADDR = os.Getenv("DB_PORT_5432_TCP_ADDR")
 
+	DB_ENV_POSTGRES_USER = "invalid"
 	var err error
 	var db *sql.DB
 

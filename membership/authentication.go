@@ -34,7 +34,11 @@ func (a AuthenticationManager) Login(email string, password string) (*User, stri
 		return nil, "", fmt.Errorf("Password required")
 	}
 
-	user := a.repo.GetByEmail(email)
+	user, err := a.repo.GetByEmail(email)
+
+	if err != nil {
+		return nil, "", err
+	}
 
 	if user == nil {
 		return nil, "", fmt.Errorf("User not found")

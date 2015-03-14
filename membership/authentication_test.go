@@ -10,11 +10,11 @@ import (
 
 type stubAuthRepo struct{}
 
-func (userRepo stubAuthRepo) Add(*User) (id int) {
-	return 1
+func (userRepo stubAuthRepo) Add(*User) (id int, err error) {
+	return 1, nil
 }
 
-func (userRepo stubAuthRepo) GetByEmail(email string) *User {
+func (userRepo stubAuthRepo) GetByEmail(email string) (*User, error) {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("secret"), 10)
 	if err != nil {
@@ -23,10 +23,10 @@ func (userRepo stubAuthRepo) GetByEmail(email string) *User {
 
 	if email == "existing@example.com" {
 		user := User{1, "existing@example.com", time.Now(), string(hashedPassword)}
-		return &user
+		return &user, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 var stub stubAuthRepo

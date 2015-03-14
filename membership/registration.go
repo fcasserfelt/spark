@@ -40,7 +40,13 @@ func (r RegistrationManager) Apply(application *Application) (*User, string, err
 		return nil, "", fmt.Errorf("Passowrd and confirm does not match")
 	}
 
-	if r.repo.GetByEmail(application.Email) != nil {
+	existing, err := r.repo.GetByEmail(application.Email)
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	if existing != nil {
 		return nil, "", fmt.Errorf("Email already exists")
 	}
 
@@ -51,7 +57,12 @@ func (r RegistrationManager) Apply(application *Application) (*User, string, err
 
 	var user = NewUser(application.Email)
 	user.Password = string(hashedPassword)
-	id := r.repo.Add(user)
+
+	id, err := r.repo.Add(user)
+	if err != nil {
+		return nil, "", err
+	}
+
 	user.Id = id
 
 	tokenString, err := GenerateToken(user)

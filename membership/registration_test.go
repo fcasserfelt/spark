@@ -7,15 +7,15 @@ import (
 
 type stubUserRepo struct{}
 
-func (userRepo stubUserRepo) Add(*User) (id int) {
-	return 1
+func (userRepo stubUserRepo) Add(*User) (id int, err error) {
+	return 1, nil
 }
 
-func (userRepo stubUserRepo) GetByEmail(email string) *User {
+func (userRepo stubUserRepo) GetByEmail(email string) (*User, error) {
 	if email == "existing@example.com" {
-		return NewUser("existing@example.com")
+		return NewUser("existing@example.com"), nil
 	}
-	return nil
+	return nil, nil
 }
 
 func TestRegistrationWithoutEmail(t *testing.T) {

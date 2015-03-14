@@ -12,8 +12,8 @@ type User struct {
 }
 
 type UserRepo interface {
-	GetByEmail(email string) *User
-	Add(*User) int
+	GetByEmail(email string) (*User, error)
+	Add(*User) (int, error)
 }
 
 func NewUser(email string) *User {

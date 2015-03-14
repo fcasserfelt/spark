@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/fcasserfelt/spark/membership"
 	_ "github.com/lib/pq"
 	"log"
@@ -19,27 +20,27 @@ func NewDbUserRepo(db *sql.DB) *DbUserRepo {
 	return dbUserRepo
 }
 
-func (repo DbUserRepo) Add(u *membership.User) (id int) {
+func (repo DbUserRepo) Add(u *membership.User) (int, error) {
 
 	var userid int
 	err := repo.db.QueryRow(`INSERT INTO users(email, password)
 	VALUES($1, $2) RETURNING id`, u.Email, u.Password).Scan(&userid)
 	if err != nil {
 		log.Printf("Sql error: %v", err)
-		return 0
+		return 0, fmt.Errorf("Sql error")
 	}
-	return userid
+	return userid, nil
 }
 
-func (repo *DbUserRepo) GetByEmail(email string) *membership.User {
+func (repo *DbUserRepo) GetByEmail(email string) (*membership.User, error) {
 
 	var user membership.User
 	err := repo.db.QueryRow("select id, email, password from users where email = $1", email).Scan(&user.Id, &user.Email, &user.Password)
 	if err != nil {
 		log.Printf("Sql error: %v", err)
-		return nil
+		return nil, fmt.Errorf("Sql error")
 	}
-	return &user
+	return &user, nil
 	/*
 		fmt.Println(name)
 
